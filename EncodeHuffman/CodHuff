@@ -1,0 +1,65 @@
+import huffman
+
+def count_runs(text):
+    if not text:
+        return []
+    
+    runs = []
+    current_char = text[0]
+    count = 1
+
+    for ch in text[1:]:
+        if ch == current_char:
+            count += 1
+        else:
+            runs.append((current_char, count))
+            current_char = ch
+            count = 1
+
+    runs.append((current_char, count))  # Add last run
+    return runs
+
+text = "aaaaaaaaaaaaaaabbbbbbbbbbbbbbc"
+# Build frequency dictionary
+freq = {}
+for char in text:
+    freq[char] = freq.get(char, 0) + 1
+
+# Encode
+codes = huffman.codebook(freq.items())
+
+encodedRLE = ""
+
+for char, cnt in count_runs(text):
+    if len(codes[char]) * cnt > 8 + len(codes[char]):
+        encodedRLE += f"{cnt}{codes[char]}"
+    else:
+        encodedRLE += codes[char]*cnt
+
+encoded = ''.join(codes[c] for c in text)
+
+# Decode
+# Invert the codebook
+decode_map = {v: k for k, v in codes.items()}
+decoded = ''
+buffer = ''
+for bit in encoded:
+    buffer += bit
+    if buffer in decode_map:
+        decoded += decode_map[buffer]
+        buffer = ''
+
+print("Original:", text)
+print("Encoded:", encoded)
+print("Encoded RLE:", encodedRLE)
+print("Decoded:", decoded)
+print(codes)
+print(freq)
+
+original_bits = len(text) * 8
+
+huffman_bits = len(encoded)
+
+bits_saved = original_bits - huffman_bits
+
+print(f"original amount of bits {original_bits}, encoded bits {huffman_bits} and the amount of saved bits {bits_saved}")
